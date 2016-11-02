@@ -73,7 +73,7 @@ public class PushPlugin extends CordovaPlugin implements PushConstants {
                         registration_id = FirebaseInstanceId.getInstance().getToken();
 
                         if (registration_id == null) {
-                            registration_id = FirebaseInstanceId.getInstance().getToken(senderID,FCM);
+                            registration_id = FirebaseInstanceId.getInstance().getToken(senderID, FCM);
                         }
 
                         if (!"".equals(registration_id)) {
@@ -82,7 +82,7 @@ public class PushPlugin extends CordovaPlugin implements PushConstants {
                             Log.v(LOG_TAG, "onRegistered: " + json.toString());
 
                             JSONArray topics = jo.optJSONArray(TOPICS);
-                            subscribeToTopics(topics, registration_id);
+                            subscribeToTopics(topics);
 
                             PushPlugin.sendEvent( json );
                         } else {
@@ -144,7 +144,7 @@ public class PushPlugin extends CordovaPlugin implements PushConstants {
                         SharedPreferences sharedPref = getApplicationContext().getSharedPreferences(COM_ADOBE_PHONEGAP_PUSH, Context.MODE_PRIVATE);
                         JSONArray topics = data.optJSONArray(0);
                         if (topics != null && !"".equals(registration_id)) {
-                            unsubscribeFromTopics(topics, registration_id);
+                            unsubscribeFromTopics(topics);
                         } else {
                             FirebaseInstanceId.getInstance().deleteInstanceId();
                             Log.v(LOG_TAG, "UNREGISTER");
@@ -211,7 +211,7 @@ public class PushPlugin extends CordovaPlugin implements PushConstants {
                 public void run() {
                     try {
                         String topic = data.getString(0);
-                        subscribeToTopic(topic, registration_id);
+                        subscribeToTopic(topic);
                         callbackContext.success();
                     } catch (JSONException e) {
                         callbackContext.error(e.getMessage());
@@ -226,7 +226,7 @@ public class PushPlugin extends CordovaPlugin implements PushConstants {
                 public void run() {
                     try {
                         String topic = data.getString(0);
-                        unsubscribeFromTopic(topic, registration_id);
+                        unsubscribeFromTopic(topic);
                         callbackContext.success();
                     } catch (JSONException e) {
                         callbackContext.error(e.getMessage());
@@ -318,17 +318,17 @@ public class PushPlugin extends CordovaPlugin implements PushConstants {
         notificationManager.cancelAll();
     }
 
-    private void subscribeToTopics(JSONArray topics, String registrationToken) throws IOException {
+    private void subscribeToTopics(JSONArray topics) throws IOException {
         if (topics != null) {
             String topic = null;
             for (int i=0; i<topics.length(); i++) {
                 topic = topics.optString(i, null);
-                subscribeToTopic(topic, registrationToken);
+                subscribeToTopic(topic);
             }
         }
     }
 
-    private void subscribeToTopic(String topic, String registrationToken) throws IOException
+    private void subscribeToTopic(String topic) throws IOException
     {
         if (topic != null) {
             Log.d(LOG_TAG, "Subscribing to topic: " + topic);
@@ -336,30 +336,21 @@ public class PushPlugin extends CordovaPlugin implements PushConstants {
         }
     }
 
-    private void unsubscribeFromTopics(JSONArray topics, String registrationToken) {
+    private void unsubscribeFromTopics(JSONArray topics) {
         if (topics != null) {
             String topic = null;
             for (int i=0; i<topics.length(); i++) {
                 topic = topics.optString(i, null);
-                if (topic != null) {
-                    Log.d(LOG_TAG, "Unsubscribing to topic: " + topic);
-                    FirebaseMessaging.getInstance().unsubscribeFromTopic(topic, registrationToken);
-
-                }
+                unsubscribeFromTopic(topic);
             }
         }
     }
 
-    private void unsubscribeFromTopic(String topic, String registrationToken) throws IOException
+    private void unsubscribeFromTopic(String topic) throws IOException
     {
-        try {
-            if (topic != null) {
-                Log.d(LOG_TAG, "Unsubscribing to topic: " + topic);
-                GcmPubSub.getInstance(getApplicationContext()).unsubscribe(registrationToken, getTopicPath(topic));
-            }
-        } catch (IOException e) {
-            Log.e(LOG_TAG, "Failed to unsubscribe to topic: " + topic, e);
-			throw e;
+        if (topic != null) {
+            Log.d(LOG_TAG, "Unsubscribing to topic: " + topic);
+            FirebaseMessaging.getInstance().unsubscribeFromTopic(topic);
         }
     }
 
