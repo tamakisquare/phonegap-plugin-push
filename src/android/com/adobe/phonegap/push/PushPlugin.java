@@ -318,7 +318,7 @@ public class PushPlugin extends CordovaPlugin implements PushConstants {
         notificationManager.cancelAll();
     }
 
-    private void subscribeToTopics(JSONArray topics) throws IOException
+    private void subscribeToTopics(JSONArray topics)
     {
         if (topics != null) {
             String topic = null;
@@ -329,20 +329,15 @@ public class PushPlugin extends CordovaPlugin implements PushConstants {
         }
     }
 
-    private void subscribeToTopic(String topic) throws IOException
+    private void subscribeToTopic(String topic)
     {
-        try {
-            if (topic != null) {
-                Log.d(LOG_TAG, "Subscribing to topic: " + topic);
-                FirebaseMessaging.getInstance().subscribeToTopic(topic);
-            }
-        } catch (IOException e) {
-            Log.e(LOG_TAG, "Failed to subscribe to topic: " + topic, e);
-            throw e;
+        if (topic != null) {
+            Log.d(LOG_TAG, "Subscribing to topic: " + topic);
+            FirebaseMessaging.getInstance().subscribeToTopic(topic);
         }
     }
 
-    private void unsubscribeFromTopics(JSONArray topics) throws IOException
+    private void unsubscribeFromTopics(JSONArray topics)
     {
         if (topics != null) {
             String topic = null;
@@ -353,17 +348,11 @@ public class PushPlugin extends CordovaPlugin implements PushConstants {
         }
     }
 
-    private void unsubscribeFromTopic(String topic) throws IOException
+    private void unsubscribeFromTopic(String topic)
     {
-        try {
-          if (topic != null) {
-              Log.d(LOG_TAG, "Unsubscribing to topic: " + topic);
-              FirebaseMessaging.getInstance().unsubscribeFromTopic(topic);
-          }
-        }
-        catch (IOException e) {
-            Log.e(LOG_TAG, "Failed to unsubscribe to topic: " + topic, e);
-            throw e;
+        if (topic != null) {
+            Log.d(LOG_TAG, "Unsubscribing to topic: " + topic);
+            FirebaseMessaging.getInstance().unsubscribeFromTopic(topic);
         }
     }
 
