@@ -318,7 +318,8 @@ public class PushPlugin extends CordovaPlugin implements PushConstants {
         notificationManager.cancelAll();
     }
 
-    private void subscribeToTopics(JSONArray topics) throws IOException {
+    private void subscribeToTopics(JSONArray topics) throws IOException
+    {
         if (topics != null) {
             String topic = null;
             for (int i=0; i<topics.length(); i++) {
@@ -330,13 +331,19 @@ public class PushPlugin extends CordovaPlugin implements PushConstants {
 
     private void subscribeToTopic(String topic) throws IOException
     {
-        if (topic != null) {
-            Log.d(LOG_TAG, "Subscribing to topic: " + topic);
-            FirebaseMessaging.getInstance().subscribeToTopic(topic);
+        try {
+            if (topic != null) {
+                Log.d(LOG_TAG, "Subscribing to topic: " + topic);
+                FirebaseMessaging.getInstance().subscribeToTopic(topic);
+            }
+        } catch (IOException e) {
+            Log.e(LOG_TAG, "Failed to subscribe to topic: " + topic, e);
+            throw e;
         }
     }
 
-    private void unsubscribeFromTopics(JSONArray topics) {
+    private void unsubscribeFromTopics(JSONArray topics) throws IOException
+    {
         if (topics != null) {
             String topic = null;
             for (int i=0; i<topics.length(); i++) {
@@ -351,6 +358,9 @@ public class PushPlugin extends CordovaPlugin implements PushConstants {
         if (topic != null) {
             Log.d(LOG_TAG, "Unsubscribing to topic: " + topic);
             FirebaseMessaging.getInstance().unsubscribeFromTopic(topic);
+        } catch (IOException e) {
+            Log.e(LOG_TAG, "Failed to unsubscribe to topic: " + topic, e);
+            throw e;
         }
     }
 
