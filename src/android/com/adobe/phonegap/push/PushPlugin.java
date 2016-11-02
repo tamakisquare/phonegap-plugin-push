@@ -6,8 +6,8 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 
-import com.google.android.gms.gcm.GcmPubSub;
-import com.google.android.gms.iid.InstanceID;
+import com.google.firebase.iid.FirebaseInstanceId;
+import com.google.firebase.messaging.FirebaseMessaging;
 
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaInterface;
@@ -70,8 +70,11 @@ public class PushPlugin extends CordovaPlugin implements PushConstants {
 
                         Log.v(LOG_TAG, "execute: senderID=" + senderID);
 
-                        String savedSenderID = sharedPref.getString(SENDER_ID, "");
-                        registration_id = InstanceID.getInstance(getApplicationContext()).getToken(senderID, GCM);
+                        registration_id = FirebaseInstanceId.getInstance().getToken();
+
+                        if (registration_id == null) {
+                            registration_id = FirebaseInstanceId.getInstance().getToken(senderID,FCM);
+                        }
 
                         if (!"".equals(registration_id)) {
                             JSONObject json = new JSONObject().put(REGISTRATION_ID, registration_id);
@@ -83,14 +86,14 @@ public class PushPlugin extends CordovaPlugin implements PushConstants {
 
                             PushPlugin.sendEvent( json );
                         } else {
-                            callbackContext.error("Empty registration ID received from GCM");
+                            callbackContext.error("Empty registration ID received from FCM");
                             return;
                         }
                     } catch (JSONException e) {
                         Log.e(LOG_TAG, "execute: Got JSON Exception " + e.getMessage());
                         callbackContext.error(e.getMessage());
                     } catch (IOException e) {
-                        Log.e(LOG_TAG, "execute: Got JSON Exception " + e.getMessage());
+                        Log.e(LOG_TAG, "execute: Got IO Exception " + e.getMessage());
                         callbackContext.error(e.getMessage());
                     }
 
@@ -143,7 +146,7 @@ public class PushPlugin extends CordovaPlugin implements PushConstants {
                         if (topics != null && !"".equals(registration_id)) {
                             unsubscribeFromTopics(topics, registration_id);
                         } else {
-                            InstanceID.getInstance(getApplicationContext()).deleteInstanceID();
+                            FirebaseInstanceId.getInstance().deleteInstanceId();
                             Log.v(LOG_TAG, "UNREGISTER");
 
                             // Remove shared prefs
@@ -315,22 +318,6 @@ public class PushPlugin extends CordovaPlugin implements PushConstants {
         notificationManager.cancelAll();
     }
 
-    /**
-    * Transform `topic name` to `topic path`
-    * Normally, the `topic` inputed from end-user is `topic name` only.
-    * We should convert them to GCM `topic path`
-    * Example:
-    *  when	    topic name = 'my-topic'
-    *  then	    topic path = '/topics/my-topic'
-    *
-    * @param    String  topic The topic name
-    * @return           The topic path
-    */
-    private String getTopicPath(String topic)
-    {
-        return "/topics/" + topic;
-    }
-
     private void subscribeToTopics(JSONArray topics, String registrationToken) throws IOException {
         if (topics != null) {
             String topic = null;
@@ -343,14 +330,9 @@ public class PushPlugin extends CordovaPlugin implements PushConstants {
 
     private void subscribeToTopic(String topic, String registrationToken) throws IOException
     {
-        try {
-            if (topic != null) {
-                Log.d(LOG_TAG, "Subscribing to topic: " + topic);
-                GcmPubSub.getInstance(getApplicationContext()).subscribe(registrationToken, getTopicPath(topic), null);
-            }
-        } catch (IOException e) {
-            Log.e(LOG_TAG, "Failed to subscribe to topic: " + topic, e);
-			throw e;
+        if (topic != null) {
+            Log.d(LOG_TAG, "Subscribing to topic: " + topic);
+            FirebaseMessaging.getInstance().subscribeToTopic(topic);
         }
     }
 
@@ -358,29 +340,13 @@ public class PushPlugin extends CordovaPlugin implements PushConstants {
         if (topics != null) {
             String topic = null;
             for (int i=0; i<topics.length(); i++) {
-                try {
-                    topic = topics.optString(i, null);
-                    if (topic != null) {
-                        Log.d(LOG_TAG, "Unsubscribing to topic: " + topic);
-                        GcmPubSub.getInstance(getApplicationContext()).unsubscribe(registrationToken, getTopicPath(topic));
-                    }
-                } catch (IOException e) {
-                    Log.e(LOG_TAG, "Failed to unsubscribe to topic: " + topic, e);
+                topic = topics.optString(i, null);
+                if (topic != null) {
+                    Log.d(LOG_TAG, "Unsubscribing to topic: " + topic);
+                    FirebaseMessaging.getInstance().unsubscribeFromTopic(topic);
+
                 }
             }
-        }
-    }
-
-    private void unsubscribeFromTopic(String topic, String registrationToken) throws IOException
-    {
-        try {
-            if (topic != null) {
-                Log.d(LOG_TAG, "Unsubscribing to topic: " + topic);
-                GcmPubSub.getInstance(getApplicationContext()).unsubscribe(registrationToken, getTopicPath(topic));
-            }
-        } catch (IOException e) {
-            Log.e(LOG_TAG, "Failed to unsubscribe to topic: " + topic, e);
-			throw e;
         }
     }
 
