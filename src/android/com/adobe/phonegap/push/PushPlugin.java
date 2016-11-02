@@ -343,10 +343,23 @@ public class PushPlugin extends CordovaPlugin implements PushConstants {
                 topic = topics.optString(i, null);
                 if (topic != null) {
                     Log.d(LOG_TAG, "Unsubscribing to topic: " + topic);
-                    FirebaseMessaging.getInstance().unsubscribeFromTopic(topic);
+                    FirebaseMessaging.getInstance().unsubscribeFromTopic(topic, registrationToken);
 
                 }
             }
+        }
+    }
+
+    private void unsubscribeFromTopic(String topic, String registrationToken) throws IOException
+    {
+        try {
+            if (topic != null) {
+                Log.d(LOG_TAG, "Unsubscribing to topic: " + topic);
+                GcmPubSub.getInstance(getApplicationContext()).unsubscribe(registrationToken, getTopicPath(topic));
+            }
+        } catch (IOException e) {
+            Log.e(LOG_TAG, "Failed to unsubscribe to topic: " + topic, e);
+			throw e;
         }
     }
 
