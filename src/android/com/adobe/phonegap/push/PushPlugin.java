@@ -215,8 +215,6 @@ public class PushPlugin extends CordovaPlugin implements PushConstants {
                         callbackContext.success();
                     } catch (JSONException e) {
                         callbackContext.error(e.getMessage());
-                    } catch (IOException e) {
-                        callbackContext.error(e.getMessage());
                     }
                 }
             });
@@ -229,8 +227,6 @@ public class PushPlugin extends CordovaPlugin implements PushConstants {
                         unsubscribeFromTopic(topic);
                         callbackContext.success();
                     } catch (JSONException e) {
-                        callbackContext.error(e.getMessage());
-                    } catch (IOException e) {
                         callbackContext.error(e.getMessage());
                     }
                 }
